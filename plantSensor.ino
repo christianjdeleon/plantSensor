@@ -167,18 +167,20 @@ void googleSheetLog() {
     valueRange.set("values/[0]/[0]", epochTime); 
     valueRange.set("values/[1]/[0]", temperature); 
     valueRange.set("values/[2]/[0]", humidity); 
-    valueRange.set("values/[3]/[0]", moisturePercent);  
+    valueRange.set("values/[3]/[0]", moisturePercent); 
 
-    bool success = GSheet.values.append(&response, spreadsheetId, "Sheet1!A2", &valueRange);
-    if (success) { 
-      response.toString(Serial, true); 
-      valueRange.clear();
-    } else { 
-      Serial.println(GSheet.errorReason()); 
-    } 
-    Serial.println(); 
-    Serial.println(ESP.getFreeHeap());
   } 
+
+  bool success = GSheet.values.append(&response, spreadsheetId, "Sheet1!A2", &valueRange);
+  if (success) { 
+    response.toString(Serial, true); 
+    valueRange.clear();
+  } else { 
+    Serial.println(GSheet.errorReason()); 
+  } 
+  Serial.println(); 
+  Serial.println(ESP.getFreeHeap());
+
 
 } 
 
@@ -199,5 +201,7 @@ void tokenStatusCallback(TokenInfo info){
     }
     else{
         GSheet.printf("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
-    }
+    } 
+
+    //hello
 }
