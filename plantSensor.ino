@@ -202,7 +202,4 @@ void tokenStatusCallback(TokenInfo info){
     else{
         GSheet.printf("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
     } 
-
-    //hello 
-    //hello
 }
