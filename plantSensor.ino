@@ -7,7 +7,6 @@
 #include "config.h"
 
 
-
 #define ENABLE_SMTP
 #define ENABLE_DEBUG
 #include <ReadyMail.h>  
@@ -19,21 +18,6 @@
 #define LIGHT_PIN 39   
 
 const char* ntpServer = "time.google.com";  
-
-
-// const char* ssid = "your_wifi_name"; 
-// const char*  password = "your_wifi_password";  
-// const char spreadsheetId[] = "your_spreadsheet_id";
-// #define APP_PASSWORD "your_app_password"
-// #define SENDER_EMAIL "your_email"
-// #define SENDER_NAME "CJ"
-// #define RECIPIENT_EMAIL "recipient_email" 
-// #define RECIPIENT_NAME "Mom"
-// #define SMTP_SERVER "server_email"
-// #define SMTP_PORT 464
-// #define PROJECT_ID "project_name"  
-// #define CLIENT_EMAIL "client_email" 
-
 
 WiFiClientSecure ssl_client; 
 SMTPClient smtp(ssl_client);  
@@ -60,7 +44,7 @@ void tokenStatusCallback(TokenInfo info);
 
 
 void setup() {
-  // put your setup code here, to run once: 
+
   Serial.begin(115200); 
   dht.begin();    
 
@@ -86,7 +70,6 @@ void setup() {
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
   
   rawMoisture = analogRead(SOIL_PIN);   
   moisturePercent = map(rawMoisture, 3400, 1150, 0, 100);
@@ -136,7 +119,6 @@ void sendPlantEmail() {
     msg.headers.add(rfc822_from, String(SENDER_NAME) + " <" + SENDER_EMAIL + ">");
     msg.headers.add(rfc822_to, String(RECIPIENT_NAME)  + " <" + RECIPIENT_EMAIL + ">");
     msg.headers.add(rfc822_subject, "Hello from ReadyMail");
-    // msg.html.body("<html><body><h1>Hello, Mom! This is your plant data.</h1></body></html>"); 
     msg.text.body("Hello, Dad! This is your plant data. Moisture: " + String(moisturePercent) + "% Light: " + String(lightPercent) + "%");
 
     configTime(0, 0, "pool.ntp.org");
@@ -165,20 +147,18 @@ void googleSheetLog() {
     valueRange.set("values/[0]/[0]", epochTime); 
     valueRange.set("values/[1]/[0]", temperature); 
     valueRange.set("values/[2]/[0]", humidity); 
-    valueRange.set("values/[3]/[0]", moisturePercent); 
+    valueRange.set("values/[3]/[0]", moisturePercent);  
 
+    bool success = GSheet.values.append(&response, spreadsheetId, "Sheet1!A2", &valueRange);
+    if (success) { 
+      response.toString(Serial, true); 
+      valueRange.clear();
+    } else { 
+      Serial.println(GSheet.errorReason()); 
+    } 
+    Serial.println(); 
+    Serial.println(ESP.getFreeHeap());
   } 
-
-  bool success = GSheet.values.append(&response, spreadsheetId, "Sheet1!A2", &valueRange);
-  if (success) { 
-    response.toString(Serial, true); 
-    valueRange.clear();
-  } else { 
-    Serial.println(GSheet.errorReason()); 
-  } 
-  Serial.println(); 
-  Serial.println(ESP.getFreeHeap());
-
 
 } 
 
@@ -199,8 +179,5 @@ void tokenStatusCallback(TokenInfo info){
     }
     else{
         GSheet.printf("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
-    } 
-
+    }
 }
-
-//hello
