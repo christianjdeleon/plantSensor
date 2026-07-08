@@ -16,9 +16,9 @@
 #define DHT_PIN 23 
 #define DHT_TYPE DHT11   
 #define LIGHT_PIN 39    
-int TIME_TO_SLEEP = 1800;  // Time ESP32 will go to sleep (in seconds)
-unsigned long long uS_TO_S_FACTOR = 1000000;  // Conversion factor for microseconds to seconds 
-RTC_DATA_ATTR int bootCount = 0;  // Number of reboots
+int TIME_TO_SLEEP = 1800; 
+unsigned long long uS_TO_S_FACTOR = 1000000;  
+RTC_DATA_ATTR int bootCount = 0;  
 
 const char* ntpServer = "time.google.com";  
 
@@ -93,10 +93,9 @@ void setup() {
 
   googleSheetLog();   
 
-  ++bootCount;                                          // Add 1 to the current value of bootCount
-  Serial.println("Boot number: " + String(bootCount));  // print the value of bootCount on the serial monitor
-  Serial.println("Going to sleep now");                 // Print when the ESP is about to go into deep sleep mode 
-
+  ++bootCount;                                          
+  Serial.println("Boot number: " + String(bootCount)); 
+  Serial.println("Going to sleep now");                 
   Serial.flush();
 
   esp_deep_sleep_start();
@@ -104,11 +103,6 @@ void setup() {
  
 } 
 
-
-
-void loop() {
-
-} 
 
 void sendPlantEmail() {   
   
