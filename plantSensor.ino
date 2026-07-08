@@ -14,8 +14,11 @@
 
 #define SOIL_PIN 36
 #define DHT_PIN 23 
-#define DHT_TYPE DHT11  
-#define LIGHT_PIN 39   
+#define DHT_TYPE DHT11   
+#define LIGHT_PIN 39    
+int TIME_TO_SLEEP = 1800;  // Time ESP32 will go to sleep (in seconds)
+unsigned long long uS_TO_S_FACTOR = 1000000;  // Conversion factor for microseconds to seconds 
+RTC_DATA_ATTR int bootCount = 0;  // Number of reboots
 
 const char* ntpServer = "time.google.com";  
 
@@ -45,7 +48,9 @@ void tokenStatusCallback(TokenInfo info);
 
 void setup() {
 
-  Serial.begin(115200); 
+  Serial.begin(115200);  
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); 
+
   dht.begin();    
 
 
@@ -62,7 +67,39 @@ void setup() {
  
   GSheet.setTokenCallback(tokenStatusCallback);
   GSheet.setPrerefreshSeconds(10*60); 
-  GSheet.begin(CLIENT_EMAIL, PROJECT_ID, PRIVATE_KEY);  
+  GSheet.begin(CLIENT_EMAIL, PROJECT_ID, PRIVATE_KEY);   
+
+  rawMoisture = analogRead(SOIL_PIN);   
+  moisturePercent = map(rawMoisture, 3400, 1150, 0, 100);
+  int rawLight = analogRead(LIGHT_PIN); 
+  lightPercent = map(rawLight, 0, 4095, 0, 100);
+
+  delay(5000);   
+
+  int timeEmailSent = 0; 
+
+  if (!emailSent && rawMoisture > soilBaseline) { 
+    sendPlantEmail();  
+    emailSent = true;  
+    timeEmailSent = millis();
+  }  else if (emailSent && millis() - timeEmailSent > 3600000) { 
+    emailSent = false; 
+  }
+
+  while (!getLocalTime(&timeinfo)) {
+  delay(500);
+  }
+
+
+  googleSheetLog();   
+
+  ++bootCount;                                          // Add 1 to the current value of bootCount
+  Serial.println("Boot number: " + String(bootCount));  // print the value of bootCount on the serial monitor
+  Serial.println("Going to sleep now");                 // Print when the ESP is about to go into deep sleep mode 
+
+  Serial.flush();
+
+  esp_deep_sleep_start();
 
  
 } 
@@ -70,35 +107,6 @@ void setup() {
 
 
 void loop() {
-  
-  rawMoisture = analogRead(SOIL_PIN);   
-  moisturePercent = map(rawMoisture, 3400, 1150, 0, 100);
-  int rawLight = analogRead(LIGHT_PIN); 
-  lightPercent = map(rawLight, 0, 4095, 0, 100);
-
-  Serial.print("Moisture: ");
-  Serial.println(String(moisturePercent) + "%");  
-  Serial.println(rawMoisture);
-  Serial.print("Temp: "); 
-  Serial.println(temperature); 
-  Serial.print("Humidity: "); 
-  Serial.println(humidity); 
-  Serial.print("Light: "); 
-  Serial.println(String(lightPercent) + "%"); 
-
-  delay(5000);  
-
-  if (!emailSent && rawMoisture > soilBaseline) { 
-    sendPlantEmail();  
-    emailSent = true; 
-  }  
-
-  while (!getLocalTime(&timeinfo)) {
-  delay(500);
-  }
-
-
-  googleSheetLog();
 
 } 
 
@@ -119,7 +127,7 @@ void sendPlantEmail() {
     msg.headers.add(rfc822_from, String(SENDER_NAME) + " <" + SENDER_EMAIL + ">");
     msg.headers.add(rfc822_to, String(RECIPIENT_NAME)  + " <" + RECIPIENT_EMAIL + ">");
     msg.headers.add(rfc822_subject, "Hello from ReadyMail");
-    msg.text.body("Hello, Dad! This is your plant data. Moisture: " + String(moisturePercent) + "% Light: " + String(lightPercent) + "%");
+    msg.text.body("Hello, Mom! This is your plant data. Moisture: " + String(moisturePercent) + "% Light: " + String(lightPercent) + "%");
 
     configTime(0, 0, "pool.ntp.org");
     while (time(nullptr) < 100000) delay(100);
