@@ -82,7 +82,7 @@ void setup() {
     sendPlantEmail();  
     emailSent = true;  
     timeEmailSent = millis();
-  }  else if (emailSent && millis() - timeEmailSent > 3600000) { 
+  }  else if (emailSent && millis() - timeEmailSent > 43200000) { 
     emailSent = false; 
   }
 
@@ -102,6 +102,10 @@ void setup() {
 
  
 } 
+
+void loop() { 
+
+}
 
 
 void sendPlantEmail() {   
